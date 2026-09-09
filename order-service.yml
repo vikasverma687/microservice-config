@@ -1,2 +1,49 @@
 test:
-  message: "Hello from Config Server!, lets see if it updates or not"
+  message: "taking conguration from server-->"
+
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/order_db
+    username: postgres
+    password: postgres
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      product-service:
+        sliding-window-size: 5
+        sliding-window-type: COUNT_BASED
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        ignore-exceptions:
+          - org.springframework.web.client.HttpClientErrorException$NotFound
+    circuit-breaker-aspect-order: 1
+
+  retry:
+    retry-aspect-order: 2
+    instances:
+      product-service:
+        max-attempts: 3
+        wait-duration: 500ms
+        retry-exceptions:
+          - java.io.IOException
+          - org.springframework.web.client.ResourceAccessException
+        ignore-exceptions:
+          - org.springframework.web.client.HttpClientErrorException$NotFound
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,circuitbreakers,metrics
+  health:
+    circuitbreakers:
+      enabled: true
